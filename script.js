@@ -33,34 +33,46 @@ function animate(element) {
 }
 
 function isAdjacent(first, second) {
-    return first.next()[0] === second[0] || first.prev()[0] === second[0];
+    let id = parseInt(first.find('img').attr('id'));
+    let secId = parseInt(second.find('img').attr('id'));
+    return id + 1 === secId || id - 1 === secId || id + 10 === secId || id - 10 === secId;
 }
 
 function moveBoth(first, second) {
     let firstPos = first.position();
     let secondPos = second.position();
-    console.log(firstPos);
-    console.log(secondPos);
-
 
     first.animate({
         top: secondPos.top,
         left: secondPos.left
     }, 500);
 
-    second.animate({
-        top: firstPos.top,
-        left: firstPos.left
-    }, 500, function() {
-        let firstClone = first.clone(true);
-        let secondClone = second.clone(true);
+    setTimeout( function () {
+        second.animate({
+            top: firstPos.top,
+            left: firstPos.left
+        }, 500, function() {
+            let firstClone = first.clone(true);
+            let secondClone = second.clone(true);
 
-        first.replaceWith(secondClone);
-        second.replaceWith(firstClone);
-    });
+            first.replaceWith(secondClone);
+            second.replaceWith(firstClone);
 
-    console.log(first.position());
-    console.log(second.position());
+            first = secondClone;
+            second = firstClone;
+
+            console.log(first.find('img').attr('id'));
+            console.log(second.find('img').attr('id'));
+
+            first.find('img').attr('id', secondClone.find('img').attr('id'));
+            second.find('img').attr('id', firstClone.find('img').attr('id'));
+
+            console.log(first.find('img').attr('id'))
+            console.log(second.find('img').attr('id'))
+        });
+    }, 500);
+
+    /*TODO Globalisan adja vissza*/
 }
 
 function onClick() {
@@ -69,12 +81,10 @@ function onClick() {
         selected = element;
         selected.addClass('selected');
         animate(element);
-    }
-    // if (selected === element){
-    //     selected.removeClass('selected');
-    //     selected = null;
-    // }
-    else {
+    } else if (selected === element){
+        selected.removeClass('selected');
+        selected = null;
+    } else {
         if(isAdjacent(selected, element)) {
             moveBoth(selected, element);
 
@@ -94,10 +104,6 @@ function drawSquares() {
         for (let j = 0; j < N; j++) {
             let number = Math.floor(Math.random() * 10);
 
-            if (number === 0){
-                number = 9;
-            }
-
             let block = $('<div></div>').addClass('square').css({
                 width: blockSize,
                 height: blockSize,
@@ -109,7 +115,7 @@ function drawSquares() {
 
             let img = $('<img />').attr({
                 'src': number + '.png',
-                'id': number
+                'id': i * 10 + j
             }).css({
                 width: '100%',
                 height: '100%'
