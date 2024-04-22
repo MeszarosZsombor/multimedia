@@ -4,6 +4,7 @@ let N = 10;
 let blockSize = sizeX / N;
 let currentRotation = 0
 let selected = null;
+let board = [];
 
 function rotate(element, degree) {
     currentRotation += degree;
@@ -32,75 +33,124 @@ function animate(element) {
     }, 150);
 }
 
-function isAdjacent(first, second) {
-    let id = parseInt(first.find('img').attr('id'));
-    let secId = parseInt(second.find('img').attr('id'));
-    return id + 1 === secId || id - 1 === secId || id + 10 === secId || id - 10 === secId;
+function isAdjacent(selected, element) {
+    let selectedPos = selected.position();
+    let elementPos = element.position();
+
+    return (Math.abs(selectedPos.top - elementPos.top) === blockSize && selectedPos.left === elementPos.left) ||
+        (Math.abs(selectedPos.left - elementPos.left) === blockSize && selectedPos.top === elementPos.top);
 }
 
 function moveBoth(first, second) {
-    let firstPos = first.position();
-    let secondPos = second.position();
+    return new Promise((resolve) => {
+        let firstPos = first.position();
+        let secondPos = second.position();
+        first.removeClass('selected');
 
-    first.animate({
-        top: secondPos.top,
-        left: secondPos.left
-    }, 500);
+        let firstIndex = board.findIndex(item => item.id === first.attr('id'));
+        let secondIndex = board.findIndex(item => item.id === second.attr('id'));
 
-    setTimeout( function () {
-        second.animate({
-            top: firstPos.top,
-            left: firstPos.left
-        }, 500, function() {
-            let firstClone = first.clone(true);
-            let secondClone = second.clone(true);
+        let temp = board[firstIndex];
+        board[firstIndex] = board[secondIndex];
+        board[secondIndex] = temp;
 
-            first.replaceWith(secondClone);
-            second.replaceWith(firstClone);
+        console.log("first animate");
+        first.animate({
+            top: secondPos.top,
+            left: secondPos.left
+        }, {
+            duration: 500,
+            complete: function () {
+                console.log("first animate end");
 
-            first = secondClone;
-            second = firstClone;
+                console.log("second animate");
+                second.animate({
+                    top: firstPos.top,
+                    left: firstPos.left
+                }, {
+                    duration: 500,
+                    complete: function () {
+                        console.log("in second animate");
+                        first.off('click');
+                        second.off('click');
 
-            console.log(first.find('img').attr('id'));
-            console.log(second.find('img').attr('id'));
+                        let firstClone = first.clone(true);
+                        let secondClone = second.clone(true);
 
-            first.find('img').attr('id', secondClone.find('img').attr('id'));
-            second.find('img').attr('id', firstClone.find('img').attr('id'));
+                        first.replaceWith(secondClone);
+                        second.replaceWith(firstClone);
 
-            console.log(first.find('img').attr('id'))
-            console.log(second.find('img').attr('id'))
+                        firstClone.click(onClick);
+                        secondClone.click(onClick);
+
+                        resolve();
+                    }
+                });
+                console.log("second animate end");
+            }
         });
-    }, 500);
-
-    /*TODO Globalisan adja vissza*/
+    });
 }
 
-function onClick() {
+function checkMatch(){
+    for (let i = 0; i < N; i++) {
+        console.log(i);
+        for (let j = 0; j < N; j++) {
+            if(j < N - 2 && board[i][j].cat === board[i][j + 1].cat && board[i][j].cat === board[i][j + 2].cat){
+                console.log("remove: " + board[i][j].id)
+                console.log("remove: " + board[i][j+1].id)
+                console.log("remove: " + board[i][j+2].id)
+                j = j + 2;
+                while (j < N - 1 && board[i][j].cat === board[i][j+1].cat){
+                    console.log("remove: " + board[i][j+1].id);
+                    j += 1;
+                }
+            }
+            if(i < N - 2 && board[i][j].cat === board[i + 1][j].cat && board[i][j].cat === board[i + 2][j].cat){
+                console.log("remove: " + board[i][j].id)
+                console.log("remove: " + board[i+1][j].id)
+                console.log("remove: " + board[i+2][j].id)
+                let k = i + 2
+                while (k < N - 1 && board[k][j].cat === board[k+1][j].cat){
+                    console.log("remove: " + board[k+1][j].id);
+                    k += 1;
+                }
+            }
+        }
+    }
+}
+
+async function onClick() {
     let element = $(this);
     if (selected === null) {
         selected = element;
         selected.addClass('selected');
-        animate(element);
-    } else if (selected === element){
-        selected.removeClass('selected');
-        selected = null;
+        animate(selected);
+        element = null;
     } else {
         if(isAdjacent(selected, element)) {
-            moveBoth(selected, element);
+            await moveBoth(selected, element);
 
-            selected.removeClass('selected');
-            selected = null;
+            console.log(selected);
+            console.log(element);
+            if(!checkMatch()){
+
+            }
         } else {
             selected.removeClass('selected');
             selected = element;
             selected.addClass('selected');
-            animate(element);
+            animate(selected);
+            element = null;
         }
+        selected = null;
+        element = null;
     }
 }
 
 function drawSquares() {
     for (let i = 0; i < N; i++){
+        board[i] = [];
         for (let j = 0; j < N; j++) {
             let number = Math.floor(Math.random() * 10);
 
@@ -115,11 +165,17 @@ function drawSquares() {
 
             let img = $('<img />').attr({
                 'src': number + '.png',
-                'id': i * 10 + j
+                'id': i * 10 + j,
+                'cat': number
             }).css({
                 width: '100%',
                 height: '100%'
             });
+
+            board[i][j] = {
+                id: i * 10 + j,
+                cat: number
+            };
 
 
             img.appendTo(block);
@@ -143,4 +199,6 @@ $(function(){
     }).appendTo('body');
 
     drawSquares();
+    console.log(board);
+    checkMatch();
 });
