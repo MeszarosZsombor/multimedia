@@ -5,6 +5,8 @@ let blockSize = sizeX / N;
 let currentRotation = 0
 let selected = null;
 let board = [];
+let remove = [];
+let gameArea;
 
 function rotate(element, degree) {
     currentRotation += degree;
@@ -94,27 +96,47 @@ function moveBoth(first, second) {
 
 function checkMatch(){
     for (let i = 0; i < N; i++) {
-        console.log(i);
         for (let j = 0; j < N; j++) {
             if(j < N - 2 && board[i][j].cat === board[i][j + 1].cat && board[i][j].cat === board[i][j + 2].cat){
                 console.log("remove: " + board[i][j].id)
+                remove[i][j] = board[i][j];
                 console.log("remove: " + board[i][j+1].id)
+                remove[i][j+1] = board[i][j+1];
                 console.log("remove: " + board[i][j+2].id)
+                remove[i][j+2] = board[i][j+2];
                 j = j + 2;
                 while (j < N - 1 && board[i][j].cat === board[i][j+1].cat){
                     console.log("remove: " + board[i][j+1].id);
+                    remove[i][j+1] = board[i][j+1];
                     j += 1;
                 }
             }
             if(i < N - 2 && board[i][j].cat === board[i + 1][j].cat && board[i][j].cat === board[i + 2][j].cat){
                 console.log("remove: " + board[i][j].id)
+                remove[i][j] = board[i][j];
                 console.log("remove: " + board[i+1][j].id)
+                remove[i+1][j] = board[i+1][j];
                 console.log("remove: " + board[i+2][j].id)
+                remove[i+2][j] = board[i+2][j];
                 let k = i + 2
                 while (k < N - 1 && board[k][j].cat === board[k+1][j].cat){
                     console.log("remove: " + board[k+1][j].id);
+                    remove[k+1][j] = board[k+1][j];
                     k += 1;
                 }
+            }
+        }
+    }
+}
+
+function removeMatchedCells() {
+    for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+            if (remove[i][j]) {
+                console.log('#' + i * 10 + j)
+                $('#gameArea [id="' + (i * 10 + j) + '"]').remove();
+                board[i][j] = null;
+                remove[i][j] = null;
             }
         }
     }
@@ -133,9 +155,8 @@ async function onClick() {
 
             console.log(selected);
             console.log(element);
-            if(!checkMatch()){
-
-            }
+            checkMatch();
+            console.log(remove);
         } else {
             selected.removeClass('selected');
             selected = element;
@@ -151,6 +172,7 @@ async function onClick() {
 function drawSquares() {
     for (let i = 0; i < N; i++){
         board[i] = [];
+        remove[i] = [];
         for (let j = 0; j < N; j++) {
             let number = Math.floor(Math.random() * 10);
 
@@ -161,11 +183,12 @@ function drawSquares() {
                 left: j * blockSize,
                 position: 'absolute',
                 zIndex: 0
-            });
+            }).attr(
+                'id', i * 10 + j
+            );
 
             let img = $('<img />').attr({
                 'src': number + '.png',
-                'id': i * 10 + j,
                 'cat': number
             }).css({
                 width: '100%',
@@ -201,4 +224,6 @@ $(function(){
     drawSquares();
     console.log(board);
     checkMatch();
+    console.log(remove);
+    removeMatchedCells();
 });
