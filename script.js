@@ -70,6 +70,7 @@ function searchById(id) {
 function swapInArray(firstId, secondId) {
     let firstItem = searchById(firstId);
     let secondItem = searchById(secondId);
+    console.log(firstItem, secondItem);
 
     let firstRow = board.findIndex(row => row.includes(firstItem));
     let firstCol = board[firstRow].indexOf(firstItem);
@@ -87,7 +88,7 @@ function moveBoth(first, second) {
 
         let firstPos = first.position();
         let secondPos = second.position();
-        first.removeClass('selected');
+        $('.square').removeClass('selected');
 
         let firstId = first.attr('id');
         let secondId = second.attr('id');
@@ -183,8 +184,6 @@ function checkEmpty() {
             }
         }
     }
-    console.log(board);
-    checkMatch();
 }
 
 function removeMatchedCells() {
@@ -210,16 +209,28 @@ async function onClick() {
         if(isAdjacent(selected, element)) {
             await moveBoth(selected, element);
 
-            if(checkMatch()) {
+            let matchFound = checkMatch();
+
+            while(matchFound) {
+                console.log(board);
+                selected = null;
+                element = null;
                 await removeMatchedCells();
                 await goDown();
-            }else{
+                checkEmpty();
+                matchFound = checkMatch();
+            }
+
+            if(!matchFound && selected && element) {
+                console.log(board);
                 error(selected);
                 error(element);
                 await moveBoth(selected, element);
+                selected = null;
+                element = null;
             }
         } else {
-            selected.removeClass('selected');
+            $('.square').removeClass('selected');
             selected = element;
             selected.addClass('selected');
             animate(selected);
@@ -267,51 +278,56 @@ function drawSquares() {
                 block.appendTo(gameArea);
             }
     }
-    checkMatch();
 }
 
 async function goDown() {
-    for (let i = N-1; i > 0; i--) {
-        for (let j = N-1; j > 0; j--) {
-            if (board[i][j].cat == null) {
-                let k = i - 1;
-                while (k >= 0 && board[k][j].cat == null){
-                    k--;
-                }
-                if(k >= 0){
-                    let upper = $('#gameArea [id="' + (i * 10 + j) + '"]');
-                    let lower = $('#gameArea [id="' + (k * 10 + j) + '"]');
+    return new Promise((resolve) => {
+        for (let i = N-1; i > 0; i--) {
+            for (let j = N-1; j > 0; j--) {
+                if (board[i][j].cat == null) {
+                    let k = i - 1;
+                    while (k >= 0 && board[k][j].cat == null){
+                        k--;
+                    }
+                    if(k >= 0){
+                        let upper = $('#gameArea [id="' + (k * 10 + j) + '"]');
+                        let lower = $('#gameArea [id="' + (i * 10 + j) + '"]');
 
-                    let firstPos = upper.position();
-                    let secondPos = lower.position();
+                        let firstPos = upper.position();
+                        let secondPos = lower.position();
 
-                    board[i][j].cat = board[k][j].cat;
-                    board[k][j].cat = null;
+                        board[i][j].cat = board[k][j].cat;
+                        board[k][j].cat = null;
 
-                    let upperImg = upper.find('img').attr('src');
-                    let secondImg = lower.find('img');
+                        let upperImg = upper.find('img');
 
-                    let secondImgSrc = secondImg.attr('src');
-
-                    secondImg.css({position: 'relative', top: 0, left: 0});
+                        upperImg.css({position: 'relative', top: 0, left: 0});
 
 
-                    secondImg.animate({
-                        top: firstPos.top - secondPos.top,
-                        left: firstPos.left - secondPos.left
-                    }, {
-                        duration: 500,
-                        complete: function () {
-                            lower.find('img').attr('src', upperImg);
-                        }
-                    });
+                        upperImg.animate({
+                            top: secondPos.top - firstPos.top,
+                            left: secondPos.left - firstPos.left
+                        }, {
+                            duration: 500,
+                            complete: function () {
+                                /*TODO neha rossz cat-et kap, nem talal match-et*/
+                                upper.empty();
+                                let img = $('<img/>').attr({
+                                    'src': upperImg.attr('src'),
+                                    'cat': upperImg.attr('cat')
+                                }).css({
+                                        width: '100%',
+                                        height: '100%'
+                                    });
+                                img.appendTo(lower);
+                            }
+                        });
+                    }
                 }
             }
         }
-    }
-    console.log(board);
-
-    /*TODO ne maradjon az oszlop tetejen az img tag*/
+        setTimeout(resolve, 550);
+    });
 }
 
 $(function(){
@@ -327,8 +343,12 @@ $(function(){
     }).appendTo('body');
 
     drawSquares();
+    checkMatch();
     removeMatchedCells();
     checkEmpty();
+    while (checkMatch()){
+        checkEmpty();
+    }
 
     $('.square').click(onClick);
 });
