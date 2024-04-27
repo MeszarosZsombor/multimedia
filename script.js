@@ -6,7 +6,20 @@ let currentRotation = 0;
 let selected = null;
 let board = [];
 let remove = [];
+let points = 0;
+let multiplier = 1;
 let gameArea;
+let point;
+let toplist;
+let game;
+let scores;
+let time;
+let tc;
+let timeleft = 5;
+
+function refreshpoint(){
+    point.text(points)
+}
 
 function rotate(element, degree) {
     currentRotation += degree;
@@ -137,9 +150,12 @@ function checkMatch(){
                 remove[i][j] = board[i][j];
                 remove[i][j+1] = board[i][j+1];
                 remove[i][j+2] = board[i][j+2];
+                points += 50 * multiplier;
+                multiplier += 0.1;
                 j = j + 2;
                 while (j < N - 1 && board[i][j].cat === board[i][j+1].cat){
                     remove[i][j+1] = board[i][j+1];
+                    points += 60 * multiplier;
                     j += 1;
                 }
                 bool = true;
@@ -148,9 +164,12 @@ function checkMatch(){
                 remove[i][j] = board[i][j];
                 remove[i+1][j] = board[i+1][j];
                 remove[i+2][j] = board[i+2][j];
+                points += 50 * multiplier;
+                multiplier += 0.1;
                 let k = i + 2
                 while (k < N - 1 && board[k][j].cat === board[k+1][j].cat){
                     remove[k+1][j] = board[k+1][j];
+                    points += 60 * multiplier;
                     k += 1;
                 }
                 bool = true;
@@ -210,6 +229,8 @@ async function onClick() {
             await moveBoth(selected, element);
 
             let matchFound = checkMatch();
+            console.log(points);
+            console.log(multiplier);
 
             while(matchFound) {
                 console.log(board);
@@ -219,7 +240,12 @@ async function onClick() {
                 await goDown();
                 checkEmpty();
                 matchFound = checkMatch();
+                console.log(points);
+                console.log(multiplier);
             }
+
+            refreshpoint();
+            multiplier = 1;
 
             if(!matchFound && selected && element) {
                 console.log(board);
@@ -283,7 +309,7 @@ function drawSquares() {
 async function goDown() {
     return new Promise((resolve) => {
         for (let i = N-1; i > 0; i--) {
-            for (let j = N-1; j > 0; j--) {
+            for (let j = N-1; j >= 0; j--) {
                 if (board[i][j].cat == null) {
                     let k = i - 1;
                     while (k >= 0 && board[k][j].cat == null){
@@ -311,7 +337,6 @@ async function goDown() {
                             duration: 500,
                             complete: function () {
                                 /*TODO neha rossz cat-et kap, nem talal match-et*/
-                                upper.empty();
                                 let img = $('<img/>').attr({
                                     'src': upperImg.attr('src'),
                                     'cat': upperImg.attr('cat')
@@ -320,6 +345,7 @@ async function goDown() {
                                         height: '100%'
                                     });
                                 img.appendTo(lower);
+                                upper.empty();
                             }
                         });
                     }
@@ -330,7 +356,54 @@ async function goDown() {
     });
 }
 
+function fill_toplist() {
+    let data = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        data[i] = [localStorage.key(i), parseInt(localStorage.getItem(localStorage.key(i)))];
+    }
+
+    data.sort(function (a, b) {
+        return b[1] - a[1];
+    });
+
+    for (let act_data of data.keys()) {
+        if (act_data < 10) {
+            $('#list').append(data[act_data][0] + ' - ' + data[act_data][1] + '<br><hr>');
+        }
+    }
+}
+
+function time_count() {
+    timeleft--;
+    $('#time').text(timeleft);
+    if (timeleft === 0) {
+        clearInterval(tc);
+        let person = prompt("Adja meg a nevét:", "anonymus");
+        localStorage.setItem(person, points);
+
+        fill_toplist();
+    }
+}
+
 $(function(){
+    game = $('<div></div>').attr('id', 'game').appendTo('body');
+    scores = $('<div></div>').attr('id', 'score').appendTo(game);
+    time = $('<div></div>').attr('id', 'time').appendTo(scores);
+    toplist = $('<div></div>').attr('id', 'toplist').appendTo(scores);
+    point = $('<div></div>').attr('id', 'points').appendTo(scores);
+
+    $('<h3>Toplista</h3>').css({
+        textAlign: 'center'
+    }).appendTo(toplist);
+
+    $('<p></p>').attr('id', 'list').appendTo(toplist);
+
+    time.text(timeleft);
+    tc = setInterval(time_count, 1000);
+
+    refreshpoint();
+
+
     gameArea = $('<div></div>').attr('id', 'gameArea').css({
         width: sizeX,
         height: sizeY,
@@ -339,8 +412,9 @@ $(function(){
         left: '50%',
         marginLeft: '-350px',
         marginTop: '-400px',
-        position: 'absolute'
-    }).appendTo('body');
+        position: 'absolute',
+        float: 'right'
+    }).appendTo(game);
 
     drawSquares();
     checkMatch();
