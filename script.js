@@ -15,7 +15,9 @@ let game;
 let scores;
 let time;
 let tc;
-let timeleft = 5;
+let timeleft = 50;
+let clickAudio = document.createElement('audio');
+let huh = document.createElement('audio');
 
 function refreshpoint(){
     point.text(points)
@@ -219,6 +221,8 @@ function removeMatchedCells() {
 
 async function onClick() {
     let element = $(this);
+    await clickAudio.play();
+
     if (selected === null) {
         selected = element;
         selected.addClass('selected');
@@ -234,6 +238,10 @@ async function onClick() {
 
             while(matchFound) {
                 console.log(board);
+                console.log("cat: " + selected);
+                // if(board[i][j].cat == 5){
+                //     huh.play();
+                // }
                 selected = null;
                 element = null;
                 await removeMatchedCells();
@@ -378,7 +386,12 @@ function time_count() {
     $('#time').text(timeleft);
     if (timeleft === 0) {
         clearInterval(tc);
-        let person = prompt("Adja meg a nevét:", "anonymus");
+        let person = prompt("Adja meg a nevét:", "anonymous");
+
+        if(person == null){
+            person = "anonymous"
+        }
+
         localStorage.setItem(person, points);
 
         fill_toplist();
@@ -391,6 +404,12 @@ $(function(){
     time = $('<div></div>').attr('id', 'time').appendTo(scores);
     toplist = $('<div></div>').attr('id', 'toplist').appendTo(scores);
     point = $('<div></div>').attr('id', 'points').appendTo(scores);
+
+    clickAudio.setAttribute('src', 'click.wav');
+    clickAudio.volume = 0.1
+
+    huh.setAttribute('src', 'huh.mp3');
+    huh.volume = 0.3
 
     $('<h3>Toplista</h3>').css({
         textAlign: 'center'
