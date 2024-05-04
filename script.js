@@ -9,7 +9,8 @@ let remove = [];
 let points = 0;
 let multiplier = 1;
 let gameArea;
-let point;
+let musicButton
+let pointText;
 let toplist;
 let game;
 let scores;
@@ -17,10 +18,12 @@ let time;
 let tc;
 let timeleft = 50;
 let clickAudio = document.createElement('audio');
-let huh = document.createElement('audio');
+let music = document.createElement('audio');
+let pop = document.createElement('audio');
+let playing = false;
 
 function refreshpoint(){
-    point.text(points)
+    pointText.text("Jelenlegi pontszámod: " + points.toFixed(0))
 }
 
 function rotate(element, degree) {
@@ -141,7 +144,7 @@ function moveBoth(first, second) {
                 });
             }
         });
-    });
+     });
 }
 
 function checkMatch(){
@@ -220,58 +223,55 @@ function removeMatchedCells() {
 }
 
 async function onClick() {
+    $('.square').removeClass('selected');
     let element = $(this);
-    await clickAudio.play();
-
     if (selected === null) {
         selected = element;
         selected.addClass('selected');
         animate(selected);
-        element = null;
-    } else {
-        if(isAdjacent(selected, element)) {
-            await moveBoth(selected, element);
+        await clickAudio.play();
+    } else if(isAdjacent(selected, element)) {
+            let first = selected;
+            let second = element;
+
+            first.off('click');
+        second.off('click');
+
+            selected = null;
+            await moveBoth(first, second);
 
             let matchFound = checkMatch();
-            console.log(points);
-            console.log(multiplier);
 
             while(matchFound) {
+                pop.currentTime = 0;
+                pop.play();
                 console.log(board);
-                console.log("cat: " + selected);
-                // if(board[i][j].cat == 5){
-                //     huh.play();
-                // }
-                selected = null;
-                element = null;
+                first.click(onClick);
+                second.click(onClick);
+                first = null;
                 await removeMatchedCells();
                 await goDown();
                 checkEmpty();
                 matchFound = checkMatch();
-                console.log(points);
-                console.log(multiplier);
             }
-
+            console.log(points)
             refreshpoint();
             multiplier = 1;
 
-            if(!matchFound && selected && element) {
+            if(!matchFound && first) {
                 console.log(board);
-                error(selected);
-                error(element);
-                await moveBoth(selected, element);
-                selected = null;
-                element = null;
+                error(first);
+                error(second);
+                await moveBoth(first, second);
+                first.click(onClick);
+                second.click(onClick);
             }
-        } else {
-            $('.square').removeClass('selected');
-            selected = element;
-            selected.addClass('selected');
-            animate(selected);
-            element = null;
-        }
+    } else {
         selected = null;
-        element = null;
+        selected = element;
+        selected.addClass('selected');
+        animate(selected);
+        clickAudio.play();
     }
 }
 
@@ -365,6 +365,7 @@ async function goDown() {
 }
 
 function fill_toplist() {
+    $('#list').empty();
     let data = [];
     for (let i = 0; i < localStorage.length; i++) {
         data[i] = [localStorage.key(i), parseInt(localStorage.getItem(localStorage.key(i)))];
@@ -383,7 +384,7 @@ function fill_toplist() {
 
 function time_count() {
     timeleft--;
-    $('#time').text(timeleft);
+    $('#time').text("Hátralévő idő: " + timeleft + " mp");
     if (timeleft === 0) {
         clearInterval(tc);
         let person = prompt("Adja meg a nevét:", "anonymous");
@@ -398,29 +399,52 @@ function time_count() {
     }
 }
 
-$(function(){
+$(document).ready(function(){
     game = $('<div></div>').attr('id', 'game').appendTo('body');
     scores = $('<div></div>').attr('id', 'score').appendTo(game);
+    musicButton = $('<div></div>').attr('id', 'music').appendTo(scores);
     time = $('<div></div>').attr('id', 'time').appendTo(scores);
     toplist = $('<div></div>').attr('id', 'toplist').appendTo(scores);
-    point = $('<div></div>').attr('id', 'points').appendTo(scores);
+    pointText = $('<div></div>').attr('id', 'pointText').appendTo(scores);
 
     clickAudio.setAttribute('src', 'click.wav');
-    clickAudio.volume = 0.1
+    clickAudio.volume = 0.1;
 
-    huh.setAttribute('src', 'huh.mp3');
-    huh.volume = 0.3
+    pop.setAttribute('src', 'pop.mp3');
+    pop.volume = 0.1;
 
-    $('<h3>Toplista</h3>').css({
+    music.setAttribute('src', 'music.mp3');
+    music.volume = 0.05;
+
+    $('<button>Zene lejátszása</button>').css({
         textAlign: 'center'
-    }).appendTo(toplist);
+    }).attr('id', 'musicButton').appendTo(musicButton);
+
+    $('#musicButton').click(function (){
+        if(!playing){
+            music.play();
+            $('#musicButton').text('Zene megállítása');
+            playing = true;
+            music.addEventListener('ended', function () {
+                this.play();
+            }, false);
+        }else{
+            music.pause();
+            $('#musicButton').text('Zene lejátszása');
+            playing = false;
+        }
+    });
+
+
+    $('<h3>Toplista</h3>').appendTo(toplist);
 
     $('<p></p>').attr('id', 'list').appendTo(toplist);
 
-    time.text(timeleft);
+    time.text("Hátralévő idő: " + timeleft + " mp");
     tc = setInterval(time_count, 1000);
 
     refreshpoint();
+    fill_toplist();
 
 
     gameArea = $('<div></div>').attr('id', 'gameArea').css({
@@ -444,4 +468,5 @@ $(function(){
     }
 
     $('.square').click(onClick);
+    points = 0;
 });
