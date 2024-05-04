@@ -21,6 +21,7 @@ let clickAudio = document.createElement('audio');
 let music = document.createElement('audio');
 let pop = document.createElement('audio');
 let playing = false;
+let padding = 6;
 
 function refreshpoint(){
     pointText.text("Jelenlegi pontszámod: " + points.toFixed(0))
@@ -285,8 +286,8 @@ function drawSquares() {
                 let block = $('<div></div>').addClass('square').css({
                     width: blockSize,
                     height: blockSize,
-                    top: i * blockSize,
-                    left: j * blockSize,
+                    top: i * blockSize + padding,
+                    left: j * blockSize + padding,
                     position: 'absolute',
                     zIndex: 0
                 }).attr(
@@ -407,6 +408,8 @@ $(document).ready(function(){
     toplist = $('<div></div>').attr('id', 'toplist').appendTo(scores);
     pointText = $('<div></div>').attr('id', 'pointText').appendTo(scores);
 
+    $('body').css("background-image", "url('nyan.gif')");
+
     clickAudio.setAttribute('src', 'click.wav');
     clickAudio.volume = 0.1;
 
@@ -450,9 +453,9 @@ $(document).ready(function(){
     gameArea = $('<div></div>').attr('id', 'gameArea').css({
         width: sizeX,
         height: sizeY,
-        border: '1px solid black',
         top: '50%',
         left: '50%',
+        padding: padding,
         marginLeft: '-350px',
         marginTop: '-400px',
         position: 'absolute',
