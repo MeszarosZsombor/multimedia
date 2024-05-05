@@ -1,5 +1,6 @@
 #game {
     margin: 0 auto;
+    font-family: "Tahoma", serif;
 }
 
 #music{
@@ -24,7 +25,7 @@
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
-    margin: 10px auto;
+    margin: 15px auto;
 }
 
 #musicButton:hover, #resetButton:hover {
@@ -46,7 +47,7 @@
 }
 
 #toplist{
-    margin: 20px auto;
+    margin: 10px auto;
 }
 
 #gameArea{
