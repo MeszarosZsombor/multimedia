@@ -15,7 +15,8 @@ let toplist;
 let game;
 let scores;
 let time;
-let tc;
+let resetButton;
+let tc = null;
 let timeleft = 50;
 let clickAudio = document.createElement('audio');
 let music = document.createElement('audio');
@@ -274,6 +275,9 @@ async function onClick() {
         animate(selected);
         clickAudio.play();
     }
+    if(tc === null){
+        tc = setInterval(time_count, 1000);
+    }
 }
 
 function drawSquares() {
@@ -407,6 +411,7 @@ $(document).ready(function(){
     time = $('<div></div>').attr('id', 'time').appendTo(scores);
     toplist = $('<div></div>').attr('id', 'toplist').appendTo(scores);
     pointText = $('<div></div>').attr('id', 'pointText').appendTo(scores);
+    resetButton = $('<div></div>').attr('id', 'reset').appendTo(scores);
 
     $('body').css("background-image", "url('nyan.gif')");
 
@@ -419,9 +424,7 @@ $(document).ready(function(){
     music.setAttribute('src', 'music.mp3');
     music.volume = 0.05;
 
-    $('<button>Zene lejátszása</button>').css({
-        textAlign: 'center'
-    }).attr('id', 'musicButton').appendTo(musicButton);
+    $('<button>Zene lejátszása</button>').attr('id', 'musicButton').appendTo(musicButton);
 
     $('#musicButton').click(function (){
         if(!playing){
@@ -438,13 +441,17 @@ $(document).ready(function(){
         }
     });
 
+    $('<button>Játék újraindítása</button>').attr('id', 'resetButton').click(function () {
+        location.reload();
+    }).appendTo(resetButton);
+
+
 
     $('<h3>Toplista</h3>').appendTo(toplist);
 
     $('<p></p>').attr('id', 'list').appendTo(toplist);
 
     time.text("Hátralévő idő: " + timeleft + " mp");
-    tc = setInterval(time_count, 1000);
 
     refreshpoint();
     fill_toplist();

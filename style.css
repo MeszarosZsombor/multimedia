@@ -4,11 +4,10 @@
 
 #music{
     position: relative;
-    margin-bottom: 20px;
     left: 2%;
 }
 
-#musicButton{
+#musicButton, #resetButton {
     background-color: #c2fbd7;
     border-radius: 100px;
     box-shadow: rgba(44, 187, 99, .2) 0 -25px 18px -14px inset,rgba(44, 187, 99, .15) 0 1px 2px,rgba(44, 187, 99, .15) 0 2px 4px,rgba(44, 187, 99, .15) 0 4px 8px,rgba(44, 187, 99, .15) 0 8px 16px,rgba(44, 187, 99, .15) 0 16px 32px;
@@ -25,9 +24,10 @@
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
+    margin: 10px auto;
 }
 
-#musicButton:hover {
+#musicButton:hover, #resetButton:hover {
     box-shadow: rgba(44,187,99,.35) 0 -25px 18px -14px inset,rgba(44,187,99,.25) 0 1px 2px,rgba(44,187,99,.25) 0 2px 4px,rgba(44,187,99,.25) 0 4px 8px,rgba(44,187,99,.25) 0 8px 16px,rgba(44,187,99,.25) 0 16px 32px;
 
 }
